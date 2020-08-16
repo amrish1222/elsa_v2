@@ -5,6 +5,9 @@
 #include <geometry_msgs/Twist.h>
 #include <PID_v1.h>
 
+// Package Params
+bool isHolonomic = true;
+
 // Initialize PID paramaters
 
 double Setpoint_fl, Input_fl, Output_fl;
@@ -77,26 +80,51 @@ void onTwist(const geometry_msgs::Twist &msg)
 {
   //nh.loginfo("Inside Callback");
   float x = msg.linear.x;
+  float y = msg.linear.y;
   float z = msg.angular.z;
   if(x > 0.3){x = 0.3;}
   if(z > 0.25){z = 0.2;}
   float w = 0.2;
-  if(!(x==0 && z==0)){
-  wtf=false;
-  Setpoint_fr = x + (z * w / 2.0)/0.1;
-  Setpoint_fl = x - (z * w / 2.0)/0.1;
-  Setpoint_br = x + (z * w / 2.0)/0.1;
-  Setpoint_bl = x - (z * w / 2.0)/0.1;
+
+  float R = 0.04;
+  float L1 = 0.105;
+  float L2 = 0.0825;
+  float L = (L1+L2);   
+  if (!isHolonomic){
+    if(!(x==0 && z==0)){
+    wtf=false;
+      Setpoint_fr = x + (z * w / 2.0)/0.1;
+      Setpoint_fl = x - (z * w / 2.0)/0.1;
+      Setpoint_br = x + (z * w / 2.0)/0.1;
+      Setpoint_bl = x - (z * w / 2.0)/0.1;
+    }
+    else{
+      wtf=true;
+      Setpoint_fl = 0;
+      Setpoint_fr = 0;
+      Setpoint_bl = 0;
+      Setpoint_br = 0;
+      
+    }
   }
   else{
-    wtf=true;
-    Setpoint_fl = 0;
-    Setpoint_fr = 0;
-    Setpoint_bl = 0;
-    Setpoint_br = 0;
-    
+    if(!(x==0 && y==0 && z==0)){
+    wtf=false;
+      Setpoint_fl = (1/R)*(x + y - L * z);
+      Setpoint_fr = (1/R)*(x - y + L * z);
+      Setpoint_bl = (1/R)*(x - y - L * z);
+      Setpoint_br = (1/R)*(x + y + L * z);
+      
+    }
+    else{
+      wtf=true;
+      Setpoint_fl = 0;
+      Setpoint_fr = 0;
+      Setpoint_bl = 0;
+      Setpoint_br = 0;
+      
+    }
   }
-
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &onTwist);
