@@ -6,14 +6,16 @@ For the Version 1.0 of elsa project visit [this](https://github.com/srujanpanuga
 
 ## Project Dependencies
 
-* To install *teleop-twist-keyboard
+* To install teleop-twist-keyboard
 
 `sudo apt-get install ros-melodic-teleop-twist-keyboard`
   
-* To install *rosserial
+* To install rosserial
 
-`sudo apt-get install ros-melodic-rosserial-arduino`
-`sudo apt-get install ros-melodic-rosserial`
+```
+sudo apt-get install ros-melodic-rosserial-arduino
+sudo apt-get install ros-melodic-rosserial
+```
 
 
 ## Docs:
