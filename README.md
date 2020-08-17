@@ -1,5 +1,14 @@
 # ELSA_V2 - Explore, Localize, Map Simultaeneously and Act - Version 2.0
 
+
+<p align="center">
+<img src="images/elsabot_2.jpeg" alt="elsa" width="600">
+</p>
+<p align="center">
+<em>ELSA Robot</em>
+</p>
+
+
 Elsa V2.0 is the extension for Elsa V1.0. This package is built to boost the capabilities of elsa in terms of Improved Localization, Powerful Actuation, Reduced Wheel Slippage and Drift, Boosted Payload capacity, Better choice of Electronics
 
 For the Version 1.0 of elsa project visit [this](https://github.com/srujanpanuganti/elsa)
