@@ -2,7 +2,7 @@
 
 
 <p align="center">
-<img src="images/elsabot_2.jpeg" alt="elsa" width="600">
+<img src="images/elsav2.gif" alt="elsa" width="400">
 </p>
 <p align="center">
 <em>ELSA Robot</em>
