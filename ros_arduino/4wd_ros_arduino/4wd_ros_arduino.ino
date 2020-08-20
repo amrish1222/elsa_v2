@@ -110,10 +110,10 @@ void onTwist(const geometry_msgs::Twist &msg)
   else{
     if(!(x==0 && y==0 && z==0)){
     wtf=false;
-      Setpoint_fl = (1/R)*(x + y - L * z);
-      Setpoint_fr = (1/R)*(x - y + L * z);
-      Setpoint_bl = (1/R)*(x - y - L * z);
-      Setpoint_br = (1/R)*(x + y + L * z);
+      Setpoint_fl = (1/R)*(x - y - L * z);
+      Setpoint_fr = (1/R)*(x + y + L * z);
+      Setpoint_bl = (1/R)*(x + y - L * z);
+      Setpoint_br = (1/R)*(x - y + L * z);
       
     }
     else{

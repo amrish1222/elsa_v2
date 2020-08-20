@@ -1,3 +1,4 @@
+
 #include <ros.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
@@ -6,6 +7,29 @@
 
 #include <geometry_msgs/Twist.h>
 #include <PID_v1.h>
+#include "odometry.h"
+
+
+// Odometry Params and Object 
+#define ODO_PERIOD 200  // Millis between /tf and /odom publication
+
+const float ticks_per_meter = 5729.58735;
+const float meterPerTick = 0.00017453;  
+const float base_width   = 0.21;         // Woodie
+
+//long encoderLeftLastValue  = 0L;
+//long encoderRightLastValue = 0L;
+
+static unsigned long NextPubMillis   = 0;
+static long encoderLeftLastValueOdo  = 0;
+static long encoderRightLastValueOdo = 0;
+static long timeLastOdo    = 0;
+float distLeft;
+float distRight;
+
+
+Odometer odo(meterPerTick, base_width);
+
 
 // Package Params
 bool isHolonomic = true;
@@ -318,7 +342,9 @@ void setup() {
   nh.advertise(lbwheel);
   nh.advertise(rbwheel);
   nh.subscribe(sub);
-  
+
+  odo.setupPubs(nh);
+
 }
 
 // Initialize starting loop paramaters for calculating velocity and time
@@ -328,7 +354,6 @@ int old_ct1=0;
 int old_ct2=0;
 int old_ct3=0;
 int old_ct4=0;
-float ticks_per_meter = 33000.1;
 
 void loop() {
   
@@ -403,6 +428,34 @@ void loop() {
   Move_motor(Output_bl,LB_PWM,LB_FORW,LB_BACK);
   Move_motor(Output_br,RB_PWM,RB_FORW,RB_BACK);
 
+
+  //==========> OdometryPublsher
+  //
+  // Check if it is time to publish /odom and /tf
+
+  long encLeft = ct1;
+  long encRight = ct2;
+
+  if (now >= NextPubMillis) {
+    NextPubMillis = now + ODO_PERIOD;
+
+    // Figure out how far we have gone in meters from last PID computation
+    distLeft  = meterPerTick * float(encLeft  - encoderLeftLastValueOdo);
+    distRight = meterPerTick * float(encRight - encoderRightLastValueOdo);
+
+  
+    // Blink the LED to show we are alive
+    //toggleLED();
+  
+    // Publish odometry
+    float odoInterval = float(now - timeLastOdo) / 1000.0;
+    odo.update_publish(nh.now(), odoInterval, distLeft, distRight);
+
+    encoderLeftLastValueOdo  = encLeft;
+    encoderRightLastValueOdo = encRight;
+    timeLastOdo = now;
+    }
+ 
   // spin the ros node
   
   nh.spinOnce();
