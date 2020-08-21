@@ -11,24 +11,28 @@
 
 
 // Odometry Params and Object 
-#define ODO_PERIOD 200  // Millis between /tf and /odom publication
+#define ODO_PERIOD 100  // Millis between /tf and /odom publication
 
 const float ticks_per_meter = 5729.58735;
 const float meterPerTick = 0.00017453;  
 const float base_width   = 0.21;         // Woodie
+const float base_length = 0.165;
 
 //long encoderLeftLastValue  = 0L;
 //long encoderRightLastValue = 0L;
 
 static unsigned long NextPubMillis   = 0;
-static long encoderLeftLastValueOdo  = 0;
-static long encoderRightLastValueOdo = 0;
+static long encoderLeftFrontLastValueOdo  = 0;
+static long encoderRightFrontLastValueOdo = 0;
+static long encoderLeftBackLastValueOdo  = 0;
+static long encoderRightBackLastValueOdo = 0;
 static long timeLastOdo    = 0;
-float distLeft;
-float distRight;
+float distLeftFront;
+float distRightFront;
+float distLeftBack;
+float distRightBack;
 
-
-Odometer odo(meterPerTick, base_width);
+Odometer odo(meterPerTick, base_width, base_length);
 
 
 // Package Params
@@ -433,15 +437,19 @@ void loop() {
   //
   // Check if it is time to publish /odom and /tf
 
-  long encLeft = ct1;
-  long encRight = ct2;
-
+  long encLeftFront = ct1;
+  long encRightFront = ct2;
+  long encLeftBack = ct3;
+  long encRightBack = ct4;
+  
   if (now >= NextPubMillis) {
     NextPubMillis = now + ODO_PERIOD;
 
     // Figure out how far we have gone in meters from last PID computation
-    distLeft  = meterPerTick * float(encLeft  - encoderLeftLastValueOdo);
-    distRight = meterPerTick * float(encRight - encoderRightLastValueOdo);
+    distLeftFront  = meterPerTick * float(encLeftFront  - encoderLeftFrontLastValueOdo);
+    distRightFront = meterPerTick * float(encRightFront - encoderRightFrontLastValueOdo);
+    distLeftBack  = meterPerTick * float(encLeftBack  - encoderLeftBackLastValueOdo);
+    distRightBack = meterPerTick * float(encRightBack - encoderRightBackLastValueOdo);
 
   
     // Blink the LED to show we are alive
@@ -449,10 +457,13 @@ void loop() {
   
     // Publish odometry
     float odoInterval = float(now - timeLastOdo) / 1000.0;
-    odo.update_publish(nh.now(), odoInterval, distLeft, distRight);
+    odo.update_publish(nh.now(), odoInterval, distLeftFront, distRightFront, distLeftBack, distRightBack);
 
-    encoderLeftLastValueOdo  = encLeft;
-    encoderRightLastValueOdo = encRight;
+    encoderLeftFrontLastValueOdo  = encLeftFront;
+    encoderRightFrontLastValueOdo = encRightFront;
+    encoderLeftBackLastValueOdo = encLeftBack;
+    encoderRightBackLastValueOdo = encRightBack;
+    
     timeLastOdo = now;
     }
  

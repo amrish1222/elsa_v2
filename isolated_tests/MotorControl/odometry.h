@@ -19,27 +19,33 @@
 
 class Odometer {
   public:
-  Odometer(const float metersPerTick, const float base_width);
+  Odometer(const float metersPerTick, const float base_width, const float base_length);
 
   void setupPubs(ros::NodeHandle &nh);
   
-  void update_publish(ros::Time current_time, const float odoInterval, const float distLeft, const float distRight);
+  void update_publish(ros::Time current_time, const float odoInterval, 
+                              const float distLeftFront, const float distRightFront,
+                              const float distLeftBack,const float distRightBack);
       
 
 private:
 
 void  update_odom(const float odoInterval, 
                   const float distLeft, const float distRight, float& vel_x, float& vel_theta);
+
+void update_omni_odom(const float odoInterval, const float distLeftFront,
+                                const float distRightFront,const float distLeftBack,
+                                const float distRightBack,float& vel_x, float& vel_y, float& vel_theta);
                   
 void  update_kinematics(const float distLeft, const float distRight, float& vel_x, float& vel_theta);
-void  publish_odom(ros::Time current_time, const float vx, const float vth);
+void  publish_odom(ros::Time current_time, const float vx, const float vy, const float vth);
 void  broadcastTf(ros::Time current_time);
 float normalize_angle(float angle);
 
 
 float _metersPerTick;
 float _base_width;  // Meters
-
+float _base_length;  // Meters
 float _cur_x;       // Meters
 float _cur_y;       // Meters
 float _cur_theta;   // Radians

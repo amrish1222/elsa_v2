@@ -33,9 +33,10 @@ geometry_msgs::TransformStamped t;
 tf::TransformBroadcaster tfBroadcaster;
 
 
-Odometer::Odometer(const float metersPerTick, const float base_width) {
+Odometer::Odometer(const float metersPerTick, const float base_width, const float base_length) {
   _metersPerTick = metersPerTick;
   _base_width    = base_width;
+  _base_length   = base_length;
   _cur_x         = 0.0;
   _cur_y         = 0.0;
   _cur_theta     = 0.0;
@@ -48,13 +49,15 @@ void Odometer::setupPubs(ros::NodeHandle &nh) {
 
 
 void Odometer::update_publish(ros::Time current_time, const float odoInterval, 
-                              const float distLeft, const float distRight) {
+                              const float distLeftFront, const float distRightFront,
+                              const float distLeftBack,const float distRightBack) {
 
   float vel_x;
+  float vel_y;
   float vel_theta;
 
-  update_odom(odoInterval, distLeft, distRight, vel_x, vel_theta);
-  publish_odom(current_time, vel_x, vel_theta);
+  update_omni_odom(odoInterval, distLeftFront, distRightFront, distLeftBack, distRightBack, vel_x, vel_y, vel_theta);
+  publish_odom(current_time, vel_x, vel_y, vel_theta);
   broadcastTf(current_time);
 }
 
@@ -94,36 +97,60 @@ void Odometer::update_odom(const float odoInterval, const float distLeft,const f
   return;
 }
 
+void Odometer::update_omni_odom(const float odoInterval, const float distLeftFront,
+                                const float distRightFront,const float distLeftBack,
+                                const float distRightBack,float& vel_x, float& vel_y, float& vel_theta) {
 
-// This is a possibly improved version of update_odom() that might replace update_odom()
-void Odometer::update_kinematics(const float leftDelta, const float rightDelta, float& vel_x, float& vel_theta) {
+//  float dist;
+  float d_theta;
+  float dist_x;
+  float dist_y;
+  dist_x = 0.25 * (distLeftFront + distRightFront + distLeftBack + distRightBack);
+  dist_y = 0.25 * (- distLeftFront + distRightFront + distLeftBack - distRightBack);
+  d_theta = (1/(_base_width/2 + _base_length/2)) * (-distLeftFront + distRightFront - distLeftBack + distRightBack);
+///  dist = sqrt(sq(dist_x) + sq(dist_y));
 
-  float new_x, new_y, new_heading, wd, x, y, heading;
-  const float unitsAxisWidth = 0.3;
+  _cur_x += dist_x * cos(_cur_theta);
+  _cur_y += dist_y * sin(_cur_theta);
+  _cur_theta = normalize_angle(_cur_theta + d_theta);
 
-  // leftDelta and rightDelta = distance that the left and right wheel have moved along
-  //  the ground
+  vel_x     = dist_x  / odoInterval;
+  vel_y     = dist_y / odoInterval;
+  vel_theta = d_theta / odoInterval;
 
-  if (fabs(leftDelta - rightDelta) < 1.0e-6) {      // basically going straight
-    float midDelta = (leftDelta - rightDelta) / 2.0;
-    new_x = x + midDelta * cos(heading);
-    new_y = y + midDelta * sin(heading);
-    new_heading = heading;
-  } else {
-
-    // The vehicle is traveling along an arc.  The radius "R" is the distance
-    // from the center of the arc to the midpoint of the axel that conects the
-    // two wheels
-    float R = unitsAxisWidth * (leftDelta + rightDelta) / (2 * (rightDelta - leftDelta)),
-          wd = (rightDelta - leftDelta) / unitsAxisWidth;
-
-    new_x = x + R * (sin(wd + heading) - sin(heading));
-    new_y = y - R * (cos(wd + heading) + cos(heading));
-    new_heading = normalize_angle(heading + wd);
-  }
+  return;
 }
 
-void Odometer::publish_odom(ros::Time current_time, const float vx, const float vth) {
+
+//// This is a possibly improved version of update_odom() that might replace update_odom()
+//void Odometer::update_kinematics(const float leftDelta, const float rightDelta, float& vel_x, float& vel_theta) {
+//
+//  float new_x, new_y, new_heading, wd, x, y, heading;
+//  const float unitsAxisWidth = 0.3;
+//
+//  // leftDelta and rightDelta = distance that the left and right wheel have moved along
+//  //  the ground
+//
+//  if (fabs(leftDelta - rightDelta) < 1.0e-6) {      // basically going straight
+//    float midDelta = (leftDelta - rightDelta) / 2.0;
+//    new_x = x + midDelta * cos(heading);
+//    new_y = y + midDelta * sin(heading);
+//    new_heading = heading;
+//  } else {
+//
+//    // The vehicle is traveling along an arc.  The radius "R" is the distance
+//    // from the center of the arc to the midpoint of the axel that conects the
+//    // two wheels
+//    float R = unitsAxisWidth * (leftDelta + rightDelta) / (2 * (rightDelta - leftDelta)),
+//          wd = (rightDelta - leftDelta) / unitsAxisWidth;
+//
+//    new_x = x + R * (sin(wd + heading) - sin(heading));
+//    new_y = y - R * (cos(wd + heading) + cos(heading));
+//    new_heading = normalize_angle(heading + wd);
+//  }
+//}
+
+void Odometer::publish_odom(ros::Time current_time, const float vx, const float vy, const float vth) {
 
     odomMsg.header.stamp          = current_time;
     odomMsg.header.frame_id       = odom;
@@ -135,7 +162,7 @@ void Odometer::publish_odom(ros::Time current_time, const float vx, const float 
     odomMsg.pose.pose.orientation = tf::createQuaternionFromYaw(_cur_theta);
 
     odomMsg.twist.twist.linear.x  = vx;
-    odomMsg.twist.twist.linear.y  = 0;
+    odomMsg.twist.twist.linear.y  = vy;
     odomMsg.twist.twist.angular.z = vth;
 
     odom_pub.publish(&odomMsg);
