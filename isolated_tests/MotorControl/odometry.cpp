@@ -105,13 +105,19 @@ void Odometer::update_omni_odom(const float odoInterval, const float distLeftFro
   float d_theta;
   float dist_x;
   float dist_y;
+  float delta_x;
+  float delta_y;
+  
   dist_x = 0.25 * (distLeftFront + distRightFront + distLeftBack + distRightBack);
   dist_y = 0.25 * (- distLeftFront + distRightFront + distLeftBack - distRightBack);
   d_theta = (1/(_base_width/2 + _base_length/2)) * (-distLeftFront + distRightFront - distLeftBack + distRightBack);
-///  dist = sqrt(sq(dist_x) + sq(dist_y));
 
-  _cur_x += dist_x * cos(_cur_theta);
-  _cur_y += dist_y * sin(_cur_theta);
+
+  delta_x = (dist_x * cos(_cur_theta) - dist_y * sin(_cur_theta)); 
+  delta_y = (dist_x * sin(_cur_theta) + dist_y * cos(_cur_theta));
+
+  _cur_x += delta_x;
+  _cur_y += delta_y;
   _cur_theta = normalize_angle(_cur_theta + d_theta);
 
   vel_x     = dist_x  / odoInterval;

@@ -138,12 +138,9 @@ void onTwist(const geometry_msgs::Twist &msg)
   float y = msg.linear.y;
   float z = msg.angular.z;
 
-  // setting min and max velocities
-  if(x < 0.05){x = 0.05;}
+  // setting max velocities
   if(x > 0.7){x = 0.7;}
-  if(y < 0.05){y = 0.05;}
   if(y > 0.7){y = 0.7;}
-  if(z < 0.1){z = 0.1;}
   if(z > 0.5){z = 0.5;}
   float w = 0.2;
 
@@ -265,10 +262,10 @@ void fix_encoder_ori_on_start(){
   int ct3 = encoder_bleft.read();
   int ct4 = encoder_bright.read();
 
-  if(ct1 < 0) {nh.loginfo("reverse front left A/B pins");}
-  if(ct2 < 0) {nh.loginfo("reverse front right A/B pins");}
-  if(ct3 < 0) {nh.loginfo("reverse back left A/B pins");}
-  if(ct4 < 0) {nh.loginfo("reverse back right A/B pins");}
+  if(ct1 <= 0) {nh.loginfo("reverse front left A/B pins");}
+  if(ct2 <= 0) {nh.loginfo("reverse front right A/B pins");}
+  if(ct3 <= 0) {nh.loginfo("reverse back left A/B pins");}
+  if(ct4 <= 0) {nh.loginfo("reverse back right A/B pins");}
   
 }
 
