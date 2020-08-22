@@ -155,16 +155,31 @@ void Odometer::publish_odom(ros::Time current_time, const float vx, const float 
     odomMsg.header.stamp          = current_time;
     odomMsg.header.frame_id       = odom;
     odomMsg.child_frame_id        = base_link;
+
+//    odomMsg.transform.translation.x = _cur_x;
+//    odomMsg.transform.translation.y = _cur_y;
+//    odomMsg.transform.translation.z = 0.0;
+//
+//    odomMsg.transform.rotation = tf::createQuaternionFromYaw(_cur_theta);
     
     odomMsg.pose.pose.position.x  = _cur_x;
     odomMsg.pose.pose.position.y  = _cur_y;
     odomMsg.pose.pose.position.z  = 0.0;
     odomMsg.pose.pose.orientation = tf::createQuaternionFromYaw(_cur_theta);
 
+    odomMsg.pose.covariance[0] = 0.001;
+    odomMsg.pose.covariance[7] = 0.001;
+    odomMsg.pose.covariance[35] = 0.001;
+
     odomMsg.twist.twist.linear.x  = vx;
     odomMsg.twist.twist.linear.y  = vy;
     odomMsg.twist.twist.angular.z = vth;
 
+    odomMsg.twist.covariance[0] = 0.0001;
+    odomMsg.twist.covariance[7] = 0.0001;
+    odomMsg.twist.covariance[35] = 0.0001;
+    
+    
     odom_pub.publish(&odomMsg);
   }
 
