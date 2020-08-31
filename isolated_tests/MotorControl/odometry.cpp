@@ -110,7 +110,7 @@ void Odometer::update_omni_odom(const float odoInterval, const float distLeftFro
   
   dist_x = 0.25 * (distLeftFront + distRightFront + distLeftBack + distRightBack);
   dist_y = 0.25 * (- distLeftFront + distRightFront + distLeftBack - distRightBack);
-  d_theta = (1/(_base_width/2 + _base_length/2)) * (-distLeftFront + distRightFront - distLeftBack + distRightBack);
+  d_theta = (0.25/(_base_width/2 + _base_length/2)) * (-distLeftFront + distRightFront - distLeftBack + distRightBack);
 
 
   delta_x = (dist_x * cos(_cur_theta) - dist_y * sin(_cur_theta)); 
@@ -173,17 +173,17 @@ void Odometer::publish_odom(ros::Time current_time, const float vx, const float 
     odomMsg.pose.pose.position.z  = 0.0;
     odomMsg.pose.pose.orientation = tf::createQuaternionFromYaw(_cur_theta);
 
-    odomMsg.pose.covariance[0] = 0.001;
-    odomMsg.pose.covariance[7] = 0.001;
-    odomMsg.pose.covariance[35] = 0.001;
+    odomMsg.pose.covariance[0] = 0.005;
+    odomMsg.pose.covariance[7] = 0.005;
+    odomMsg.pose.covariance[35] = 0.030;
 
     odomMsg.twist.twist.linear.x  = vx;
     odomMsg.twist.twist.linear.y  = vy;
     odomMsg.twist.twist.angular.z = vth;
 
-    odomMsg.twist.covariance[0] = 0.0001;
-    odomMsg.twist.covariance[7] = 0.0001;
-    odomMsg.twist.covariance[35] = 0.0001;
+    odomMsg.twist.covariance[0] = 0.005;
+    odomMsg.twist.covariance[7] = 0.005;
+    odomMsg.twist.covariance[35] = 0.030;
     
     
     odom_pub.publish(&odomMsg);
@@ -199,7 +199,7 @@ void Odometer::publish_odom(ros::Time current_time, const float vx, const float 
     t.transform.translation.x = _cur_x;
     t.transform.translation.y = _cur_y;
     t.transform.translation.z = 0.0;
-    t.transform.rotation      = tf::createQuaternionFromYaw(-_cur_theta);
+    t.transform.rotation      = tf::createQuaternionFromYaw(_cur_theta);
 
 
     tfBroadcaster.sendTransform(t);
